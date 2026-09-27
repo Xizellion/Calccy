@@ -1,0 +1,6 @@
+{
+  "name": "AuraCalc - Frosted Glass Apple Calculator",
+  "description": "Apple-inspired frosted glass calculator with organic uneven pebble buttons, misty translucent vapor backdrop, history tape, sound haptics, and Flutter mobile code export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
