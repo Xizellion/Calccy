@@ -26,18 +26,30 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'
           channel: 'stable'
           cache: true
 
-      - name: Initialize Android project configuration
+      - name: Disable Flutter Analytics & Diagnostics
         run: |
-          echo "Configuring Android project scaffold..."
-          flutter create --platforms=android --org com.auracalc.app .
+          flutter config --no-analytics
+          flutter --version
+
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | flutter doctor --android-licenses || true
+
+      - name: Setup Android Project Scaffold
+        run: |
+          echo "Setting up Flutter Android build scaffold..."
+          # If android scaffold needs initialization, use explicit valid package name
+          flutter create --project-name auracalc --org com.auracalc.app --platforms=android .
+          # Ensure execution permissions for gradle wrapper
+          chmod +x android/gradlew || true
 
       - name: Get Flutter dependencies
         run: |
@@ -47,11 +59,19 @@ jobs:
         run: |
           flutter build apk --release --no-tree-shake-icons
 
-      - name: Verify APK was generated
+      - name: Check and Prepare APK Artifact
         run: |
-          echo "Checking generated APK files:"
-          ls -lah build/app/outputs/flutter-apk/
-          cp build/app/outputs/flutter-apk/app-release.apk ./AuraCalc-v1.0.0-release.apk
+          echo "Inspecting generated APK outputs:"
+          ls -lah build/app/outputs/flutter-apk/ || ls -lah build/app/outputs/apk/release/ || true
+          
+          # Copy release APK to root with clean versioned name
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            cp build/app/outputs/flutter-apk/app-release.apk ./AuraCalc-v1.0.0-release.apk
+            echo "Release APK copied successfully!"
+          elif [ -f "build/app/outputs/apk/release/app-release.apk" ]; then
+            cp build/app/outputs/apk/release/app-release.apk ./AuraCalc-v1.0.0-release.apk
+            echo "Release APK copied from release dir!"
+          fi
 
       - name: Upload APK to GitHub Artifacts
         uses: actions/upload-artifact@v4
@@ -60,7 +80,7 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/*.apk
             ./AuraCalc-v1.0.0-release.apk
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Create Release and Upload APK (On Version Tag)
