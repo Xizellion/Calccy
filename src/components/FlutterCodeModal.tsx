@@ -36,35 +36,66 @@ flutter:
   uses-material-design: true
 `;
 
-  const githubWorkflowCode = `name: Build Android Release APK
+  const githubWorkflowCode = `name: Build Android APK
 
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build:
-    name: Build Flutter APK
+  build-apk:
+    name: Build & Export Android APK
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
-      - uses: subosito/flutter-action@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.x'
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: flutter build apk --release --split-per-abi=false
-      - name: Upload APK
+
+      - name: Initialize Android project configuration
+        run: |
+          flutter create --platforms=android --org com.auracalc.app .
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Verify APK was generated
+        run: |
+          ls -lah build/app/outputs/flutter-apk/
+          cp build/app/outputs/flutter-apk/app-release.apk ./AuraCalc-v1.0.0-release.apk
+
+      - name: Upload APK to GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AuraCalc-v1.0.0-Release-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: AuraCalc-Android-APK
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            ./AuraCalc-v1.0.0-release.apk
+          if-no-files-found: error
+          retention-days: 30
 `;
 
   const currentDisplayCode =
@@ -218,13 +249,23 @@ jobs:
                     </h3>
                     <ol className="text-xs text-white/70 space-y-2.5 list-decimal pl-4">
                       <li>
-                        Push codebase to GitHub:
+                        Push changes to GitHub:
                         <div className="p-2 my-1 rounded-lg bg-black/60 font-mono text-[11px] text-cyan-300 border border-white/10">
                           git push origin main
                         </div>
                       </li>
                       <li>
-                        GitHub Actions will automatically run <code className="text-amber-300 font-mono">build-apk.yml</code> and build the APK!
+                        GitHub Actions will run <code className="text-amber-300 font-mono">build-apk.yml</code> automatically.
+                      </li>
+                      <li>
+                        <strong className="text-white">Download APK on GitHub:</strong>
+                        <div className="p-2 my-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-200 space-y-1">
+                          <div>1. Go to your GitHub repository</div>
+                          <div>2. Click the <span className="font-bold underline">Actions</span> tab at top</div>
+                          <div>3. Select latest <span className="font-bold underline">Build Android APK</span> run</div>
+                          <div>4. Scroll down to <span className="font-bold underline">Artifacts</span></div>
+                          <div>5. Click <span className="font-bold text-white underline">AuraCalc-Android-APK</span> to download!</div>
+                        </div>
                       </li>
                       <li>
                         Or build locally with single terminal command:
@@ -233,7 +274,7 @@ jobs:
                         </div>
                       </li>
                       <li>
-                        APK Output Location:
+                        Local APK Output Location:
                         <div className="p-2 my-1 rounded-lg bg-black/60 font-mono text-[10px] text-white/80 border border-white/10 break-all">
                           build/app/outputs/flutter-apk/app-release.apk
                         </div>
