@@ -77,30 +77,117 @@ export const WorldMarketTicker: React.FC<Props> = ({ onSelectPrice }) => {
   const [headlines, setHeadlines] = useState<string[]>(INITIAL_HEADLINES);
   const isFetchingRef = useRef<boolean>(false);
 
-  // 1. Live Market Online Fetcher
+  // 1. Live Market Online Fetcher (Gold, Oil, USD, BTC)
   const fetchLiveMarketOnline = async () => {
     if (isFetchingRef.current || !navigator.onLine) return;
     isFetchingRef.current = true;
 
     try {
-      const btcRes = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true',
-        { signal: AbortSignal.timeout(4000) }
-      );
-      if (btcRes.ok) {
-        const data = await btcRes.json();
-        if (data?.bitcoin?.usd) {
-          const liveBtc = data.bitcoin.usd;
-          const liveBtcChange = Number((data.bitcoin.usd_24h_change || 0).toFixed(2));
+      // First try our full-stack endpoint
+      let handled = false;
+      try {
+        const apiRes = await fetch('/api/market-front', { signal: AbortSignal.timeout(4000) });
+        if (apiRes.ok) {
+          const mData = await apiRes.json();
+          if (mData && mData.btc && mData.gold) {
+            setItems((prev) =>
+              prev.map((it) => {
+                if (it.id === 'btc' && mData.btc.price) {
+                  return {
+                    ...it,
+                    price: mData.btc.price,
+                    changePercent: mData.btc.changePercent,
+                    isPositive: mData.btc.isPositive,
+                    sparkline: [...it.sparkline.slice(1), mData.btc.price],
+                  };
+                }
+                if (it.id === 'gold' && mData.gold.price) {
+                  return {
+                    ...it,
+                    price: mData.gold.price,
+                    changePercent: mData.gold.changePercent,
+                    isPositive: mData.gold.isPositive,
+                    sparkline: [...it.sparkline.slice(1), mData.gold.price],
+                  };
+                }
+                if (it.id === 'oil' && mData.oil.price) {
+                  return {
+                    ...it,
+                    price: mData.oil.price,
+                    changePercent: mData.oil.changePercent,
+                    isPositive: mData.oil.isPositive,
+                    sparkline: [...it.sparkline.slice(1), mData.oil.price],
+                  };
+                }
+                if (it.id === 'usd' && mData.usd.price) {
+                  return {
+                    ...it,
+                    price: mData.usd.price,
+                    changePercent: mData.usd.changePercent,
+                    isPositive: mData.usd.isPositive,
+                    sparkline: [...it.sparkline.slice(1), mData.usd.price],
+                  };
+                }
+                return it;
+              })
+            );
+            handled = true;
+          }
+        }
+      } catch {
+        // proceed to direct client fallback
+      }
+
+      if (!handled) {
+        // Direct Binance API fallback for BTC & Gold (PAXG)
+        const [btcRes, paxgRes] = await Promise.allSettled([
+          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+            signal: AbortSignal.timeout(3500),
+          }),
+          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT', {
+            signal: AbortSignal.timeout(3500),
+          }),
+        ]);
+
+        let liveBtc: number | null = null;
+        let liveBtcChg = 0;
+        if (btcRes.status === 'fulfilled' && btcRes.value.ok) {
+          const d = await btcRes.value.json();
+          if (d.lastPrice) {
+            liveBtc = Number(parseFloat(d.lastPrice).toFixed(0));
+            liveBtcChg = Number(parseFloat(d.priceChangePercent).toFixed(2));
+          }
+        }
+
+        let liveGold: number | null = null;
+        let liveGoldChg = 0;
+        if (paxgRes.status === 'fulfilled' && paxgRes.value.ok) {
+          const d = await paxgRes.value.json();
+          if (d.lastPrice) {
+            liveGold = Number(parseFloat(d.lastPrice).toFixed(2));
+            liveGoldChg = Number(parseFloat(d.priceChangePercent).toFixed(2));
+          }
+        }
+
+        if (liveBtc !== null || liveGold !== null) {
           setItems((prev) =>
             prev.map((it) => {
-              if (it.id === 'btc') {
+              if (it.id === 'btc' && liveBtc !== null) {
                 return {
                   ...it,
                   price: liveBtc,
-                  changePercent: liveBtcChange,
-                  isPositive: liveBtcChange >= 0,
+                  changePercent: liveBtcChg,
+                  isPositive: liveBtcChg >= 0,
                   sparkline: [...it.sparkline.slice(1), liveBtc],
+                };
+              }
+              if (it.id === 'gold' && liveGold !== null) {
+                return {
+                  ...it,
+                  price: liveGold,
+                  changePercent: liveGoldChg,
+                  isPositive: liveGoldChg >= 0,
+                  sparkline: [...it.sparkline.slice(1), liveGold],
                 };
               }
               return it;
@@ -109,7 +196,7 @@ export const WorldMarketTicker: React.FC<Props> = ({ onSelectPrice }) => {
         }
       }
     } catch {
-      // Fallback cleanly
+      // Retain existing items
     } finally {
       isFetchingRef.current = false;
     }

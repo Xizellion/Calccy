@@ -203,7 +203,7 @@ export const Card3DContainer: React.FC<Props> = ({
             {frontContent}
           </div>
 
-          {/* BACK FACE: Life Expectancy Card */}
+          {/* BACK FACE: Stock Forecast & Pro Traders Card */}
           <div
             style={{
               transform: 'rotateY(180deg) translateZ(1px)',

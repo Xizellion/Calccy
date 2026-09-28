@@ -27,7 +27,7 @@ import { ThemeSettingsModal } from './components/ThemeSettingsModal';
 import { FlutterCodeModal } from './components/FlutterCodeModal';
 import { MobileFrame } from './components/MobileFrame';
 import { Card3DContainer } from './components/Card3DContainer';
-import { LifeExpectancyCard } from './components/LifeExpectancyCard';
+import { StockForecastCard } from './components/StockForecastCard';
 import { WorldMarketTicker } from './components/WorldMarketTicker';
 import {
   Operator,
@@ -491,11 +491,11 @@ export default function App() {
 
         {/* Right slot: 3D Flip, Scientific & Settings */}
         <div className="flex items-center gap-1">
-          {/* Quick 3D Flip to Life Expectancy Screen */}
+          {/* Quick 3D Flip to Stock Forecast Screen */}
           <button
             onClick={handleFlipToggle}
             className="p-2 rounded-full hover:bg-white/10 active:scale-95 text-cyan-300 transition-all cursor-pointer"
-            title="Flip to Life Expectancy Card"
+            title="Flip to Top 10 Stocks & Pro Forecasts"
           >
             <Rotate3d className="w-4 h-4" />
           </button>
@@ -560,18 +560,22 @@ export default function App() {
     </div>
   );
 
-  // BACK CONTENT: 3D Life Expectancy & Mortality Card with Pumping 3D Heart
-  const renderBackLifeExpectancy = () => (
+  // BACK CONTENT: Real-time Top 10 Stocks & 5 Pro Trader Forecasts
+  const renderBackStockForecast = () => (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden">
-      {/* Crimson / Noir Vapor Glass Background for Mortality side */}
+      {/* Sleek Frosted Vapor Glass Background */}
       <FrostedVaporBackground
-        theme="midnight_purple"
+        theme="deep_ocean"
         vaporDensity="dense"
         enableWipeEffect={enableWipeEffect}
       />
 
-      <LifeExpectancyCard
+      <StockForecastCard
         onFlipBack={handleFlipToggle}
+        onSelectPrice={(priceVal) => {
+          setDisplay(priceVal);
+          setShouldResetDisplay(true);
+        }}
       />
     </div>
   );
@@ -603,7 +607,7 @@ export default function App() {
             title="Flip 3D Paper Screen"
           >
             <Rotate3d className="w-3.5 h-3.5" />
-            <span>{isFlipped ? 'Calculator' : '3D Life Flip'}</span>
+            <span>{isFlipped ? 'Calculator' : 'Stock Forecast'}</span>
           </button>
 
           <button
@@ -693,7 +697,7 @@ export default function App() {
           {/* 3D Paper Card Flip Container (Touch Swipe enabled) */}
           <Card3DContainer
             frontContent={renderFrontCalculator()}
-            backContent={renderBackLifeExpectancy()}
+            backContent={renderBackStockForecast()}
             isFlipped={isFlipped}
             onFlipToggle={handleFlipToggle}
           />

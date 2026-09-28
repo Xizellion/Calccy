@@ -146,6 +146,30 @@ export const FrostedVaporBackground: React.FC<Props> = ({
   // Color schemes for background aurora seen through frosted glass
   const getAuroraGradients = () => {
     switch (theme) {
+      case 'white_metallic':
+      case 'liquid_silver':
+      default:
+        return (
+          <>
+            {/* Luminous Liquid Platinum / White Metallic Flare (Top-Left) */}
+            <div className="absolute -top-28 -left-20 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-white/60 via-slate-100/35 to-zinc-300/10 blur-3xl opacity-90 animate-pulse duration-7000" />
+
+            {/* Specular Silver Metallic Reflection (Center-Right) */}
+            <div
+              className="absolute top-1/4 -right-24 w-88 h-88 rounded-full blur-3xl opacity-80 animate-pulse duration-10000"
+              style={{
+                background:
+                  'radial-gradient(circle at 40% 40%, rgba(255,255,255,0.55) 0%, rgba(241,245,249,0.3) 45%, rgba(148,163,184,0.08) 75%, transparent 100%)',
+              }}
+            />
+
+            {/* Brushed Liquid Silver Light Ribbon (Mid-Left) */}
+            <div className="absolute top-1/2 -left-24 w-80 h-80 rounded-full bg-gradient-to-tr from-white/45 via-slate-200/25 to-transparent blur-3xl opacity-75" />
+
+            {/* Bottom Metallic Crystal Frost Reflection (Full Edge-to-Edge) */}
+            <div className="absolute -bottom-10 inset-x-0 h-72 bg-gradient-to-t from-white/45 via-slate-100/30 to-transparent blur-3xl opacity-90" />
+          </>
+        );
       case 'sunset_aurora':
         return (
           <>
@@ -179,7 +203,6 @@ export const FrostedVaporBackground: React.FC<Props> = ({
           </>
         );
       case 'midnight_purple':
-      default:
         return (
           <>
             <div className="absolute -top-32 -left-24 w-96 h-96 rounded-full bg-gradient-to-tr from-purple-700 via-indigo-600 to-pink-500 blur-3xl opacity-75" />
@@ -192,20 +215,39 @@ export const FrostedVaporBackground: React.FC<Props> = ({
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
-      {/* 1. Underlying Deep Canvas */}
-      <div className="absolute inset-0 bg-slate-950/90" />
+      {/* 1. Underlying Sleek White Metallic Canvas */}
+      <div
+        className="absolute inset-0 transition-colors duration-500"
+        style={{
+          background:
+            theme === 'white_metallic' || theme === 'liquid_silver'
+              ? 'linear-gradient(175deg, #181d24 0%, #0f1318 45%, #151a22 100%)'
+              : 'rgba(2, 6, 23, 0.92)',
+        }}
+      />
+
+      {/* 1b. Metallic Brushed Specular Sheen Layer (Crystal Clear White Metallic) */}
+      {(theme === 'white_metallic' || theme === 'liquid_silver') && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-45"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.03) 28%, rgba(255,255,255,0.18) 52%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.2) 100%)',
+          }}
+        />
+      )}
 
       {/* 2. Fluid Glowing Aurora Orbs shining through the glass */}
       <div className="absolute inset-0 overflow-hidden">
         {getAuroraGradients()}
       </div>
 
-      {/* 3. Frosted Glass Layer with High Backdrop Blur */}
+      {/* 3. Frosted Glass Layer with High Backdrop Blur & Crystal Brightness */}
       <div
-        className="absolute inset-0 backdrop-blur-2xl bg-white/[0.04]"
+        className="absolute inset-0 backdrop-blur-2xl bg-white/[0.06]"
         style={{
-          backdropFilter: 'blur(36px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(36px) saturate(180%)',
+          backdropFilter: 'blur(36px) brightness(112%) contrast(104%)',
+          WebkitBackdropFilter: 'blur(36px) brightness(112%) contrast(104%)',
         }}
       />
 

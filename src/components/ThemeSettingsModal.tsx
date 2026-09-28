@@ -239,14 +239,16 @@ export const ThemeSettingsModal: React.FC<Props> = ({
                 {/* 2. Aurora Color Palette (Visual Color Buttons) */}
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-white/60 mb-2 font-medium">
-                    Aurora Glass Color
+                    Glass Theme & Refraction
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'sunset_aurora', bg: 'from-pink-500 via-rose-500 to-amber-400' },
-                      { id: 'midnight_purple', bg: 'from-purple-600 via-violet-600 to-blue-500' },
-                      { id: 'deep_ocean', bg: 'from-cyan-400 via-teal-500 to-blue-600' },
-                      { id: 'frosted_emerald', bg: 'from-emerald-400 via-teal-600 to-lime-500' },
+                      { id: 'white_metallic', label: 'White Metallic', bg: 'from-white via-slate-200 to-zinc-400', text: 'text-slate-900' },
+                      { id: 'liquid_silver', label: 'Liquid Silver', bg: 'from-slate-100 via-zinc-300 to-slate-400', text: 'text-slate-900' },
+                      { id: 'sunset_aurora', label: 'Sunset', bg: 'from-pink-500 via-rose-500 to-amber-400', text: 'text-white' },
+                      { id: 'midnight_purple', label: 'Midnight', bg: 'from-purple-600 via-violet-600 to-blue-500', text: 'text-white' },
+                      { id: 'deep_ocean', label: 'Ocean', bg: 'from-cyan-400 via-teal-500 to-blue-600', text: 'text-white' },
+                      { id: 'frosted_emerald', label: 'Emerald', bg: 'from-emerald-400 via-teal-600 to-lime-500', text: 'text-white' },
                     ].map((th) => (
                       <button
                         key={th.id}
@@ -254,17 +256,22 @@ export const ThemeSettingsModal: React.FC<Props> = ({
                           sound.playGlassTap(1050, 0.05, 0.12);
                           onThemeChange(th.id as AuroraTheme);
                         }}
-                        className={`h-11 rounded-2xl flex items-center justify-center border transition-all cursor-pointer bg-gradient-to-tr ${th.bg} ${
+                        className={`h-12 px-2 rounded-2xl flex flex-col items-center justify-center border transition-all cursor-pointer bg-gradient-to-tr ${th.bg} ${
                           theme === th.id
                             ? 'ring-2 ring-white scale-105 shadow-lg'
                             : 'opacity-70 hover:opacity-100 border-white/20'
                         }`}
                       >
-                        {theme === th.id && (
-                          <div className="p-1 rounded-full bg-black/40 text-white">
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {theme === th.id && (
+                            <div className="p-0.5 rounded-full bg-black/40 text-white">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                          )}
+                          <span className={`text-[10px] font-semibold tracking-tight ${th.text}`}>
+                            {th.label}
+                          </span>
+                        </div>
                       </button>
                     ))}
                   </div>
